@@ -1,0 +1,74 @@
+name: CyberArena CI/CD Pipeline
+
+on:
+  push:
+    branches: [ "main" ]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository_owner }}/cyberarena-app
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write # Нужно для пуша образов в GHCR
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 1. Логинимся в GitHub Container Registry
+      - name: Log in to the Container registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }} # Автоматический токен GitHub
+
+      # 2. Собираем и пушим Docker-образ
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./app
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+
+      # 3. Создаем временный кластер K8s (Kind)
+      - name: Create Kind Cluster
+        uses: helm/kind-action@v1.8.0
+        with:
+          cluster_name: cyberarena-ci
+
+      # 4. Загружаем наш свежесобранный образ в кластер Kind
+      - name: Load image into Kind
+        run: |
+          kind load docker-image ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }} --name cyberarena-ci
+
+      # 5. Деплоим приложение в K8s
+      - name: Deploy to Kubernetes
+        run: |
+          # Подменяем переменную в манифесте на реальный тег образа (по хешу коммита)
+          sed -i 's|ghcr.io/${{ github.repository_owner }}/cyberarena-app:latest|${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}|g' k8s/vote-deployment.yaml
+          
+          # Применяем манифесты
+          kubectl apply -f k8s/vote-deployment.yaml
+          
+          # Ждем, пока поды поднимутся
+          kubectl rollout status deployment/cyberarena-frontend --timeout=60s
+
+      # 6. Тестируем (Healthcheck)
+      - name: Test Deployment
+        run: |
+          # Пробрасываем порт и делаем curl запрос
+          kubectl port-forward svc/cyberarena-svc 8080:80 &
+          sleep 5
+          RESPONSE=$(curl -s http://localhost:8080)
+          echo "Response from K8s: $RESPONSE"
+          if echo "$RESPONSE" | grep -q "CyberArena"; then
+            echo "✅ HEALTH CHECK PASSED!"
+          else
+            echo "❌ HEALTH CHECK FAILED!"
+            exit 1
+          fi
