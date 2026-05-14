@@ -1,0 +1,7 @@
+*.exe
+*.tar
+.terraform/
+*.tfstate
+*.tfstate.backup
+example-voting-app/
+microservices-demo/
