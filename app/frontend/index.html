@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>CyberArena HelpDesk</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f4f9; padding: 20px; }
+        .container { max-width: 600px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        h1 { color: #333; }
+        input, button { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        button { background: #28a745; color: white; border: none; cursor: pointer; font-size: 16px; }
+        button:hover { background: #218838; }
+        .ticket { background: #e9ecef; padding: 10px; margin: 5px 0; border-left: 5px solid #007bff; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🛠 CyberArena HelpDesk</h1>
+        <input type="text" id="titleInput" placeholder="Опишите вашу проблему...">
+        <button onclick="submitTicket()">Отправить тикет</button>
+        <h2>Открытые тикеты:</h2>
+        <div id="ticketsList"></div>
+    </div>
+    <script>
+        const API_URL = 'http://localhost:8081/api/tickets'; // Порт 8081 будет проброшен на Backend
+        
+        async function loadTickets() {
+            const response = await fetch(API_URL);
+            const tickets = await response.json();
+            const list = document.getElementById('ticketsList');
+            list.innerHTML = '';
+            tickets.reverse().forEach(t => {
+                list.innerHTML += `<div class="ticket"><strong>Тикет #${t.id}</strong>: ${t.title} <em>(${t.status})</em></div>`;
+            });
+        }
+
+        async function submitTicket() {
+            const title = document.getElementById('titleInput').value;
+            if (!title) return alert('Введите описание!');
+            await fetch(API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ title: title })
+            });
+            document.getElementById('titleInput').value = '';
+            loadTickets();
+        }
+
+        loadTickets();
+    </script>
+</body>
+</html>

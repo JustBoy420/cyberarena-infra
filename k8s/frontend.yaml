@@ -1,32 +1,30 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: cyberarena-frontend
+  name: frontend
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: cyberarena
+      app: frontend
   template:
     metadata:
       labels:
-        app: cyberarena
+        app: frontend
     spec:
       containers:
       - name: frontend
-        image: ghcr.io/justboy420/cyberarena-app:latest
-        imagePullPolicy: Always
+        image: cyberarena-frontend:local
         ports:
         - containerPort: 80
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: cyberarena-svc
+  name: frontend-svc
 spec:
-  type: ClusterIP
   selector:
-    app: cyberarena
+    app: frontend
   ports:
     - port: 80
       targetPort: 80
