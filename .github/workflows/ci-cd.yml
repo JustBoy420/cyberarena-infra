@@ -35,16 +35,14 @@ jobs:
 
       - name: Create Kind Cluster
         uses: helm/kind-action@v1.8.0
-        with:
-          cluster_name: cyberarena-ci
 
       - name: Load image into Kind
         run: |
-          kind load docker-image ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }} --name cyberarena-ci
+          kind load docker-image ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }} --name chart-testing
 
       - name: Deploy to Kubernetes
         run: |
-          sed -i 's|ghcr.io/GITHUB_REPOSITORY_OWNER/cyberarena-app:latest|${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}|g' k8s/vote-deployment.yaml
+          sed -i 's|ghcr.io/justboy420/cyberarena-app:latest|${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}|g' k8s/vote-deployment.yaml
           kubectl apply -f k8s/vote-deployment.yaml
           kubectl rollout status deployment/cyberarena-frontend --timeout=60s
 
