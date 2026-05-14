@@ -6,7 +6,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository_owner }}/cyberarena-app
+  IMAGE_NAME: justboy420/cyberarena-app
 
 jobs:
   build-and-deploy:

@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: frontend
-        image: ghcr.io/GITHUB_REPOSITORY_OWNER/cyberarena-app:latest
+        image: ghcr.io/justboy420/cyberarena-app:latest
         imagePullPolicy: Always
         ports:
         - containerPort: 80
