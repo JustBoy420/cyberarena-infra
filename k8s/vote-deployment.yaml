@@ -14,10 +14,8 @@ spec:
     spec:
       containers:
       - name: frontend
-        # Мы будем использовать образ из GHCR. 
-        # GITHUB_REPOSITORY_OWNER подставится автоматически в CI/CD
-        image: ghcr.io/${GITHUB_REPOSITORY_OWNER}/cyberarena-app:latest
-        imagePullPolicy: Always # В CI/CD нам всегда нужен свежий образ
+        image: ghcr.io/GITHUB_REPOSITORY_OWNER/cyberarena-app:latest
+        imagePullPolicy: Always
         ports:
         - containerPort: 80
 ---
